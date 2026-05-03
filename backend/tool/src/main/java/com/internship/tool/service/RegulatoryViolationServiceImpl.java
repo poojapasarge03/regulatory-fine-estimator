@@ -2,6 +2,9 @@ package com.internship.tool.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.internship.tool.dto.RegulatoryViolationDto;
@@ -37,11 +40,10 @@ public class RegulatoryViolationServiceImpl implements RegulatoryViolationServic
     }
 
     @Override
-    public List<RegulatoryViolationResponse> getAll() {
-        return repository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+    public Page<RegulatoryViolationResponse> getAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findAll(pageable)
+                .map(this::mapToResponse);
     }
 
     @Override
