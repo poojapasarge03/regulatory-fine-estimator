@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 8px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+        .report-section {
+            margin: 25px 0;
+        }
+        .report-section h3 {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+            margin: 0 0 15px 0;
+        }
+        .summary-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-box .number {
+            font-size: 28px;
+            font-weight: bold;
+            line-height: 1;
+            margin: 0;
+        }
+        .stat-box .label {
+            font-size: 12px;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 13px;
+        }
+        table th {
+            background-color: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+        table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .severity-critical {
+            color: #f5576c;
+            font-weight: 600;
+        }
+        .severity-high {
+            color: #ffc107;
+            font-weight: 600;
+        }
+        .severity-medium {
+            color: #17a2b8;
+            font-weight: 600;
+        }
+        .severity-low {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .info-box {
+            background-color: #f9f9f9;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .info-box p {
+            margin: 5px 0;
+        }
+        .action-button {
+            display: inline-block;
+            background-color: #667eea;
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        .action-button:hover {
+            background-color: #764ba2;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Weekly Regulatory Violation Report</h1>
+            <p>Your compliance dashboard summary</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                <p th:text="'Hello, ' + ${userName} + '!'">Hello, User!</p>
+                <p>Here's your comprehensive weekly report of regulatory violations and compliance activities.</p>
+            </div>
+
+            <div class="report-section">
+                <h3>📊 Report Summary</h3>
+                <p>This report covers all regulatory violations created or updated in the past 7 days.</p>
+            </div>
+
+            <div class="report-section">
+                <h3>📋 Violations Overview</h3>
+                <p th:utext="${reportData}"></p>
+            </div>
+
+            <div class="info-box">
+                <p><strong>💡 Quick Tips:</strong></p>
+                <p>• Review all violations to ensure compliance deadlines are being met</p>
+                <p>• Update violation statuses as you make progress</p>
+                <p>• Address critical violations immediately to avoid penalties</p>
+                <p>• Contact support if you need assistance</p>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="#" class="action-button">View Detailed Report</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is an automated report from the Regulatory Fine Estimator System</p>
+            <p>Report generated on: <span th:text="${#dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm')}">2026-05-04 12:00</span></p>
+            <p>
+                <a href="#">View Dashboard</a> | 
+                <a href="#">Preferences</a> | 
+                <a href="#">Help</a>
+            </p>
+            <p>&copy; 2026 Regulatory Fine Estimator. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

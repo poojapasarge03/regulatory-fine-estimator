@@ -44,7 +44,7 @@ public class RegulatoryViolationServiceImpl implements RegulatoryViolationServic
     }
 
     @Override
-    @Cacheable(value = "violations", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort")
+    @Cacheable(value = "violations", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort.toString()")
     public Page<RegulatoryViolation> getAll(Pageable pageable) {
         return repository.findAll(pageable);
     }

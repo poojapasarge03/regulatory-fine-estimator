@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.internship.tool.entity.User;
 import com.internship.tool.security.JwtUtil;
-
-import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -28,17 +25,22 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             Authentication auth = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(request.username, request.password)
             );
 
-            String token = jwtUtil.generateToken(request.getUsername());
+            String token = jwtUtil.generateToken(request.username);
             return ResponseEntity.ok(new TokenResponse(token, "Login successful"));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(new ErrorResponse("Invalid username or password"));
         }
+    }
+
+    public static class LoginRequest {
+        public String username;
+        public String password;
     }
 
     @GetMapping("/health")

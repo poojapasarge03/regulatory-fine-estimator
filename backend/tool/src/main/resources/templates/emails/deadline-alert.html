@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header .alert-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .alert-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .alert-box h3 {
+            color: #856404;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        .violation-details {
+            background-color: #f9f9f9;
+            border-left: 4px solid #f5576c;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .violation-details .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .violation-details .detail-row:last-child {
+            border-bottom: none;
+        }
+        .violation-details .detail-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+        .violation-details .detail-value {
+            color: #333;
+            text-align: right;
+        }
+        .severity-critical {
+            background-color: #f8d7da;
+            border-left-color: #f5576c;
+        }
+        .severity-high {
+            background-color: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        .severity-medium {
+            background-color: #d1ecf1;
+            border-left-color: #17a2b8;
+        }
+        .countdown {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .countdown .days {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .countdown .label {
+            font-size: 14px;
+            margin-top: 8px;
+            opacity: 0.9;
+        }
+        .action-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-weight: 600;
+            transition: opacity 0.3s;
+        }
+        .action-button:hover {
+            opacity: 0.9;
+        }
+        .footer {
+            background-color: #f9f9f9;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+        .footer a {
+            color: #f5576c;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="alert-icon">⚠️</div>
+            <h1>DEADLINE ALERT</h1>
+        </div>
+        
+        <div class="content">
+            <p th:text="'Hello, ' + ${userName} + '!'">Hello, User!</p>
+            <p>A regulatory violation has an upcoming deadline that requires your immediate attention.</p>
+
+            <div class="alert-box">
+                <h3 th:text="${violationTitle}">Violation Title</h3>
+                <p>This violation requires action before the deadline expires. Please review and take necessary steps immediately.</p>
+            </div>
+
+            <div class="violation-details" th:classappend="${severity == 'CRITICAL' ? ' severity-critical' : severity == 'High' ? ' severity-high' : ' severity-medium'}">
+                <div class="detail-row">
+                    <span class="detail-label">Violation Title:</span>
+                    <span class="detail-value" th:text="${violationTitle}">Title</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Severity Level:</span>
+                    <span class="detail-value" th:text="${severity}">Medium</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Deadline:</span>
+                    <span class="detail-value" th:text="${deadline}">2026-05-15 10:00:00</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Estimated Fine:</span>
+                    <span class="detail-value" th:text="${estimatedFine}">$0.00</span>
+                </div>
+            </div>
+
+            <div class="countdown">
+                <p class="days" th:text="${daysUntilDeadline}">7</p>
+                <p class="label" th:text="'Days remaining until deadline'">Days remaining</p>
+            </div>
+
+            <div class="alert-box">
+                <h3>⏰ Action Required</h3>
+                <p>Please take the following actions:</p>
+                <ul>
+                    <li>Review the violation details immediately</li>
+                    <li>Assess compliance requirements</li>
+                    <li>Implement necessary corrective actions</li>
+                    <li>Update the violation status in the system</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="#" class="action-button">Take Action Now</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>This is an urgent notification from the Regulatory Fine Estimator System</strong></p>
+            <p>
+                <a href="#">View Details</a> | 
+                <a href="#">Preferences</a> | 
+                <a href="#">Contact Support</a>
+            </p>
+            <p>&copy; 2026 Regulatory Fine Estimator. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
