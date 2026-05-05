@@ -1,0 +1,241 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# Day 9: Docker Compose Multi-Service Setup with Health Checks
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5 Core Services:
+#   1. PostgreSQL Database (regdb) - Primary data storage
+#   2. Redis Cache (redis) - Caching & session management
+#   3. MailHog SMTP (mail) - Email service for testing
+#   4. Spring Boot App (regulatory-app) - Main application backend
+#   5. Adminer (adminer) - Database administration UI
+#
+# All services connected via dedicated Docker network (app-network)
+# Health checks ensure correct startup order and service readiness
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: '3.8'
+
+services:
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 1️⃣  PostgreSQL Database Service
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # Primary relational database for application data
+  # Includes health check to verify DB is ready before dependent services start
+  db:
+    image: postgres:15-alpine
+    container_name: regdb
+    hostname: db  # Important for inter-service communication
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Additional PostgreSQL configurations
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      TZ: "UTC"
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persist database data across container restarts
+      - postgres_data:/var/lib/postgresql/data
+      # Optional: Mount initialization scripts
+      - ./src/main/resources/db/migration:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Test database connectivity
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s      # Check every 10 seconds
+      timeout: 5s        # Timeout after 5 seconds
+      retries: 5         # Retry 5 times before marking unhealthy
+      start_period: 10s  # Grace period before first check
+    networks:
+      - app-network
+    labels:
+      - "app.component=database"
+      - "app.description=PostgreSQL relational database"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 2️⃣  Redis Cache Service
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # In-memory cache and session store for application performance
+  # Supports Spring Cache abstraction for application-level caching
+  redis:
+    image: redis:alpine
+    container_name: redis
+    hostname: redis  # Important for inter-service communication
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ""
+    ports:
+      - "6379:6379"
+    volumes:
+      # Persist Redis data (AOF - Append Only File)
+      - redis_data:/data
+    healthcheck:
+      # Redis PING command should return PONG
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s      # Check every 10 seconds
+      timeout: 5s        # Timeout after 5 seconds
+      retries: 5         # Retry 5 times before marking unhealthy
+      start_period: 10s  # Grace period before first check
+    networks:
+      - app-network
+    labels:
+      - "app.component=cache"
+      - "app.description=Redis in-memory cache"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 3️⃣  MailHog SMTP Service
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # Email service for testing email functionality without sending real emails
+  # All emails captured in web UI for inspection
+  mail:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    hostname: mail  # Important for inter-service communication
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP port (for sending emails)
+      - "8025:8025"   # Web UI port (for viewing sent emails)
+    environment:
+      # MailHog configuration
+      MH_STORAGE: memory
+      MH_MAILDIR_PATH: /mailhog
+    # Note: MailHog doesn't have a built-in health check command
+    # Using service_started instead of service_healthy for mail service
+    networks:
+      - app-network
+    labels:
+      - "app.component=email"
+      - "app.description=MailHog SMTP service for testing"
+      - "app.web_ui=http://localhost:8025"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 4️⃣  Spring Boot Application Service
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # Main backend application container
+  # Depends on all other services being healthy before starting
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Build arguments for custom builds
+      args:
+        JAVA_VERSION: 17
+        MAVEN_VERSION: 3.8
+    image: regulatory-fine-estimator:latest
+    container_name: regulatory-app
+    hostname: app  # Important for inter-service communication
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT}:8080"
+    environment:
+      # Spring Boot Configuration
+      SPRING_APPLICATION_NAME: "regulatory-fine-estimator"
+      SPRING_PROFILES_ACTIVE: "docker"
+      SERVER_PORT: 8080
+      
+      # Database Configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_DATABASE: POSTGRESQL
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "false"
+      
+      # Redis/Cache Configuration
+      SPRING_CACHE_TYPE: redis
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: ${REDIS_PORT}
+      SPRING_REDIS_TIMEOUT: 2000
+      SPRING_REDIS_JEDIS_POOL_MAX_ACTIVE: 8
+      SPRING_REDIS_JEDIS_POOL_MAX_IDLE: 8
+      
+      # Email/Mail Configuration
+      SPRING_MAIL_HOST: mail
+      SPRING_MAIL_PORT: 1025
+      SPRING_MAIL_USERNAME: test@example.com
+      SPRING_MAIL_PASSWORD: ""
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: "false"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: "false"
+      
+      # Actuator Configuration for health checks
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+      
+      # Logging Configuration
+      LOGGING_LEVEL_ROOT: "INFO"
+      LOGGING_LEVEL_COM_INTERNSHIP_TOOL: "DEBUG"
+    
+    # Service dependency management - wait for healthcheck conditions
+    depends_on:
+      db:
+        condition: service_healthy        # Wait for database to be healthy
+      redis:
+        condition: service_healthy        # Wait for Redis to be healthy
+      mail:
+        condition: service_started        # Mail service doesn't have healthcheck
+    
+    # Health check for Spring Boot application
+    healthcheck:
+      # Check Spring Boot Actuator health endpoint
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s      # Check every 30 seconds
+      timeout: 10s       # Timeout after 10 seconds
+      retries: 5         # Retry 5 times before marking unhealthy
+      start_period: 60s  # Grace period (startup time) before first check
+    
+    networks:
+      - app-network
+    
+    labels:
+      - "app.component=backend"
+      - "app.description=Spring Boot regulatory fines application"
+      - "app.api_endpoint=http://localhost:8080"
+      - "app.health_check=http://localhost:8080/actuator/health"
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # 5️⃣  Adminer Database Administration Tool
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # Web-based database management interface
+  # Access database without command-line tools
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    hostname: adminer
+    restart: unless-stopped
+    ports:
+      - "9090:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    
+    # Depends on database being healthy
+    depends_on:
+      db:
+        condition: service_healthy
+    
+    networks:
+      - app-network
+    
+    labels:
+      - "app.component=admin"
+      - "app.description=Database administration UI"
+      - "app.web_ui=http://localhost:9090"
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Named Volumes - Persist data across container restarts
+# ═══════════════════════════════════════════════════════════════════════════════
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Custom Bridge Network - All services communicate through this network
+# ═══════════════════════════════════════════════════════════════════════════════
+networks:
+  app-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

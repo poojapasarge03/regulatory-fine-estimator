@@ -1,6 +1,36 @@
-# Quick Setup Guide - Email Notifications
+# Quick Setup Guide - Docker Compose & Email Notifications
 
-## 5-Minute Setup
+## 🚀 Day 9: Docker Compose (Recommended)
+
+### Ultra-Fast Setup (All Services in One Command)
+
+```powershell
+# Navigate to project
+cd backend\tool
+
+# Run integration test (builds, starts, and tests everything)
+.\docker-compose-integration-test.ps1
+
+# Done! All 5 services running:
+# ✓ PostgreSQL Database (localhost:5432)
+# ✓ Redis Cache (localhost:6379)
+# ✓ MailHog Email (localhost:1025 + UI at :8025)
+# ✓ Spring Boot App (http://localhost:8080)
+# ✓ Adminer DB Admin (http://localhost:9090)
+```
+
+**Access Points**:
+- 🌐 API: http://localhost:8080/api
+- 🏥 Health: http://localhost:8080/actuator/health
+- 📧 Email UI: http://localhost:8025
+- 🗄️  DB Admin: http://localhost:9090
+- 📚 Swagger: http://localhost:8080/swagger-ui.html
+
+See [DOCKER_COMPOSE_GUIDE.md](DOCKER_COMPOSE_GUIDE.md) for complete documentation.
+
+---
+
+## 📧 Manual Setup (Traditional - 5-Minute Setup)
 
 ### Step 1: Gmail Setup (if using Gmail)
 ```
